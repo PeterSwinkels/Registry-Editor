@@ -88,22 +88,23 @@ Public Type ValueStr
    ValueType As Long    'The value's data type.
 End Type
 
-Public Const DEFAULT_VALUE_COLOR As Long = vbCyan       'Indicates that the displayed value is a default value.
-Public Const NO_INDEX As Long = -1&                     'Indicates that no index has been specified.
-Public Const NO_KEY As Long = 0&                        'Indicates that no registry key is being referred to.
-Public Const PIXELS_PER_CHARACTER_X As Long = 8&         'The width of a character in pixels used by the character scale mode.
+Public Const DEFAULT_VALUE_COLOR As Long = vbCyan       'Defines the background color for displaying default values.
+Public Const NO_INDEX As Long = -1&                     'Defines an empty selection.
+Public Const NO_KEY As Long = 0&                        'Defines a null registry key.
+Public Const PIXELS_PER_CHARACTER_X As Long = 8&        'Defines the width of a character in pixels used by the character scale mode.
+Public Const ROOT_KEY As Long = -1&                     'Defines the registry's root key.
 Private Const ESCAPE_CHARACTER As String = "/"           'Defines the escape character used when escaping registry values.
-Private Const HKEY_CLASSES_ROOT As Long = &H80000000     'The HKEY_CLASSES registry hive key handle.
-Private Const HKEY_CURRENT_CONFIG As Long = &H80000005   'The HKEY_CURRENT_CONFIG registry hive key handle.
-Private Const HKEY_CURRENT_USER As Long = &H80000001     'The HKEY_CURRENT_USER registry hive key handle.
-Private Const HKEY_DYN_DATA As Long = &H80000006         'The HKEY_DYN_DATA registry hive key handle.
-Private Const HKEY_LOCAL_MACHINE As Long = &H80000002    'The HKEY_LOCAL_MACHINE registry hive key handle.
-Private Const HKEY_PERFORMANCE_DATA As Long = &H80000004 'The HKEY_PERFORMANCE registry hive key handle.
-Private Const HKEY_USERS As Long = &H80000003            'The HKEY_USERS registry hive key handle.
-Private Const MAX_LONG_STRING As Long = &HFFFF&          'The maximum length in bytes allowed for a long string.
-Private Const MAX_REG_VALUE_DATA As Long = &HFFFFF       'The maximum length in bytes allowed for a registry value's data.
-Private Const MAX_REG_VALUE_NAME As Long = &H3FFF&       'The maximum length in bytes allowed for a registry value's name.
-Private Const MAX_SHORT_STRING As Long = &HFF&           'The maximum length in bytes allowed for a short string.
+Private Const HKEY_CLASSES_ROOT As Long = &H80000000     'Defines the HKEY_CLASSES registry hive key handle.
+Private Const HKEY_CURRENT_CONFIG As Long = &H80000005   'Defines the HKEY_CURRENT_CONFIG registry hive key handle.
+Private Const HKEY_CURRENT_USER As Long = &H80000001     'Defines the HKEY_CURRENT_USER registry hive key handle.
+Private Const HKEY_DYN_DATA As Long = &H80000006         'Defines the HKEY_DYN_DATA registry hive key handle.
+Private Const HKEY_LOCAL_MACHINE As Long = &H80000002    'Defines the HKEY_LOCAL_MACHINE registry hive key handle.
+Private Const HKEY_PERFORMANCE_DATA As Long = &H80000004 'Defines the HKEY_PERFORMANCE registry hive key handle.
+Private Const HKEY_USERS As Long = &H80000003            'Defines the HKEY_USERS registry hive key handle.
+Private Const MAX_LONG_STRING As Long = &HFFFF&          'Defines the maximum length in bytes allowed for a long string.
+Private Const MAX_REG_VALUE_DATA As Long = &HFFFFF       'Defines the maximum length in bytes allowed for a registry value's data.
+Private Const MAX_REG_VALUE_NAME As Long = &H3FFF&       'Defines the maximum length in bytes allowed for a registry value's name.
+Private Const MAX_SHORT_STRING As Long = &HFF&           'Defines the maximum length in bytes allowed for a short string.
 
 'This procedure checks whether an error occurred during the most recent Windows API call.
 Private Function CheckForError(ReturnValue As Long, Optional CheckReturnValue As Boolean = False, Optional Ignored As Long = ERROR_SUCCESS) As Long
@@ -235,7 +236,7 @@ Dim Escaped As String
 Dim Index As Long
 Dim NextCharacter As String
 
-   Escaped = Empty
+   Escaped = vbNullString
    Index = 1
    Do Until Index > Len(Text)
       Character = Mid$(Text, Index, 1)
@@ -262,7 +263,7 @@ EndRoutine:
    
 ErrorTrap:
    HandleError
-   Escaped = Empty
+   Escaped = vbNullString
    Resume EndRoutine
 End Function
 
@@ -292,7 +293,7 @@ On Error GoTo ErrorTrap
 Dim SystemDateTime As SYSTEMTIME
 Dim Text As String
 
-   Text = Empty
+   Text = vbNullString
    If CBool(CheckForError(FileTimeToSystemTime(FileDateTime, SystemDateTime))) Then
       With SystemDateTime
          Text = Text & Format$(.wYear, "0000") & "-"
@@ -310,15 +311,15 @@ EndRoutine:
    
 ErrorTrap:
    HandleError
-   Text = Empty
+   Text = vbNullString
    Resume EndRoutine
 End Function
 'This procedure returns the specified registry hive key's information.
-Private Function GetHiveKey(Optional Index As Long = NO_INDEX, Optional HiveKeyH As Long = NO_KEY, Optional HiveKeyName As String = Empty) As HiveKeyStr
+Private Function GetHiveKey(Optional Index As Long = NO_INDEX, Optional HiveKeyH As Long = NO_KEY, Optional HiveKeyName As String = vbNullString) As HiveKeyStr
 On Error GoTo ErrorTrap
 Dim HiveKey As HiveKeyStr
    
-   HiveKey.KeyName = Empty
+   HiveKey.KeyName = vbNullString
    HiveKey.PredefinedH = NO_KEY
    
    Do
@@ -345,16 +346,16 @@ Dim HiveKey As HiveKeyStr
             HiveKey.KeyName = "HKEY_USERS"
             HiveKey.PredefinedH = HKEY_USERS
          Case Is > 5
-            HiveKey.KeyName = Empty
+            HiveKey.KeyName = vbNullString
             HiveKey.PredefinedH = NO_KEY
             Exit Do
       End Select
-      If HiveKeyH = NO_KEY And HiveKeyName = Empty Then
+      If HiveKeyH = NO_KEY And HiveKeyName = vbNullString Then
          Exit Do
       Else
-         If Not HiveKeyH = Empty Then
+         If Not HiveKeyH = NO_KEY Then
             If HiveKey.PredefinedH = HiveKeyH Then Exit Do
-         ElseIf Not HiveKeyName = Empty Then
+         ElseIf Not HiveKeyName = vbNullString Then
             If HiveKey.KeyName = HiveKeyName Then Exit Do
          End If
          Index = Index + 1
@@ -390,7 +391,7 @@ Dim ReturnValue As Long
       If ReturnValue = ERROR_INVALID_PARAMETER Then
          ReturnValue = CheckForError(RegQueryInfoKeyA(KeyH, vbNullString, CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), KeyDateTime), CheckReturnValue:=True, Ignored:=ERROR_INVALID_PARAMETER)
          ClassLength = 0
-         KeyClass = Empty
+         KeyClass = vbNullString
       End If
       CloseKey KeyH
    
@@ -434,7 +435,7 @@ ErrorTrap:
 End Function
 
 'This procedure returns the registry keys contained by the specified key.
-Public Function GetKeys(Optional ParentKeyH As Long = NO_KEY) As KeyStr()
+Public Function GetKeys(Optional ParentKeyH As Long = ROOT_KEY) As KeyStr()
 On Error GoTo ErrorTrap
 Dim ClassLength As Long
 Dim HiveKeyIndex As Long
@@ -450,7 +451,7 @@ Dim ReturnValue As Long
 
    Erase Keys()
    
-   If ParentKeyH = NO_KEY Then
+   If ParentKeyH = ROOT_KEY Then
       HiveKeyIndex = 0
       Do
          HiveKeyH = GetHiveKey(HiveKeyIndex).PredefinedH
@@ -466,7 +467,7 @@ Dim ReturnValue As Long
                   ReDim Preserve Keys(LBound(Keys()) To UBound(Keys()) + 1) As KeyStr
                End If
                Keys(UBound(Keys())).KeyAccessible = True
-               Keys(UBound(Keys())).KeyClass = Empty
+               Keys(UBound(Keys())).KeyClass = vbNullString
                Keys(UBound(Keys())).KeyDateTime.dwHighDateTime = 0
                Keys(UBound(Keys())).KeyDateTime.dwLowDateTime = 0
                Keys(UBound(Keys())).KeyName = GetHiveKey(HiveKeyIndex).KeyName
@@ -526,8 +527,8 @@ Dim ValueType As Long
       Value.ValueName = ValueName
       Value.ValueType = ValueType
    Else
-      Value.ValueData = Empty
-      Value.ValueName = Empty
+      Value.ValueData = vbNullString
+      Value.ValueName = vbNullString
       Value.ValueType = REG_NONE
    End If
    
@@ -627,14 +628,14 @@ ErrorTrap:
 End Function
 
 'This procedure adds or returns a parent key handle.
-Public Function KeyStack(Optional PushKey As String = Empty, Optional PopKey As Boolean = False, Optional ByRef Index As Long = NO_INDEX, Optional Refresh As Boolean = False) As String
+Public Function KeyStack(Optional PushKey As String = vbNullString, Optional PopKey As Boolean = False, Optional ByRef Index As Long = NO_INDEX, Optional Refresh As Boolean = False) As String
 On Error GoTo ErrorTrap
 Dim KeyName As String
 Static KeyNames() As String
 
-   KeyName = Empty
+   KeyName = vbNullString
    
-   If Not PushKey = Empty Then
+   If Not PushKey = vbNullString Then
       If CheckForError(SafeArrayGetDim(KeyNames())) = 0 Then
          ReDim KeyNames(0 To 0) As String
       Else
@@ -664,7 +665,7 @@ EndRoutine:
    
 ErrorTrap:
    HandleError
-   KeyName = Empty
+   KeyName = vbNullString
    Resume EndRoutine
 End Function
 
@@ -696,7 +697,7 @@ Dim Text As String
    Text = "\"
    Do
       KeyName = KeyStack(, , Index)
-      If KeyName = Empty Then Exit Do
+      If KeyName = vbNullString Then Exit Do
       Text = Text & KeyName & "\"
       Index = Index + 1
    Loop
@@ -707,7 +708,7 @@ EndRoutine:
    
 ErrorTrap:
    HandleError
-   Text = Empty
+   Text = vbNullString
    Resume EndRoutine
 End Function
 
@@ -715,12 +716,12 @@ End Function
 
 
 'This procedure opens the registry key under the specified key with the specified name.
-Private Function OpenKey(ChildKeyName As String, Optional ParentKeyH As Long = NO_KEY) As Long
+Private Function OpenKey(ChildKeyName As String, Optional ParentKeyH As Long = ROOT_KEY) As Long
 On Error GoTo ErrorTrap
 Dim KeyH As Long
 
    KeyH = NO_KEY
-   If ParentKeyH = NO_KEY Then
+   If ParentKeyH = ROOT_KEY Then
       KeyH = GetHiveKey(, , ChildKeyName).PredefinedH
    Else
       CheckForError RegOpenKeyExA(ParentKeyH, ChildKeyName, CLng(0), KEY_ALL_ACCESS Or KEY_WOW64_64KEY, KeyH), CheckReturnValue:=True
@@ -741,10 +742,10 @@ Public Function OpenSelectedKey(SelectedKeyName As String, SelectedKeyIndex As L
 On Error GoTo ErrorTrap
 Dim ParentKeyH As Long
 
-   ParentKeyH = NO_KEY
+   ParentKeyH = ROOT_KEY
    
    If Not SelectedKeyIndex = NO_INDEX Then
-      If (Not KeyStack() = Empty) And (SelectedKeyIndex = 0) Then
+      If (Not KeyStack() = vbNullString) And (SelectedKeyIndex = 0) Then
          KeyStack , PopKey:=True
       Else
          KeyStack PushKey:=SelectedKeyName
@@ -848,7 +849,7 @@ Dim Index As Long
       With KeyList
          .Enabled = False
          .Clear
-         If Not ParentKeyH = NO_KEY Then .AddItem ".."
+         If Not ParentKeyH = ROOT_KEY Then .AddItem ".."
          
          If Not SafeArrayGetDim(Keys()) = 0 Then
             For Index = LBound(Keys()) To UBound(Keys())
@@ -885,7 +886,7 @@ Dim Unescaped As String
 
    ErrorAt = 0
    Index = 1
-   Unescaped = Empty
+   Unescaped = vbNullString
    Do Until Index > Len(Text)
       Character = Mid$(Text, Index, 1)
       NextCharacter = Mid$(Text, Index + 1, 1)
@@ -928,7 +929,7 @@ EndRoutine:
    
 ErrorTrap:
    HandleError
-   Unescaped = Empty
+   Unescaped = vbNullString
    Resume EndRoutine
 End Function
 
@@ -952,7 +953,7 @@ Dim Index As Long
             .Rows = Abs(UBound(Values()) - LBound(Values())) + .FixedRows + 1
             For Index = LBound(Values()) To UBound(Values())
                .Row = Index + .FixedRows
-               If Values(Index).ValueName = Empty Then
+               If Values(Index).ValueName = vbNullString Then
                   .CellBackColor = DEFAULT_VALUE_COLOR: .Col = 0: .Text = ValueTypeName(Values(Index).ValueType)
                   .CellBackColor = DEFAULT_VALUE_COLOR: .Col = 1: .Text = "(Default)"
                   .CellBackColor = DEFAULT_VALUE_COLOR: .Col = 2: .Text = Escape(Values(Index).ValueData, EscapeAll:=IsNumber(Values(Index).ValueType))
@@ -999,7 +1000,7 @@ Private Function ValueTypeName(ValueType As Long) As String
 On Error GoTo ErrorTrap
 Dim TypeName As String
    
-   TypeName = Empty
+   TypeName = vbNullString
    Select Case ValueType
       Case REG_BINARY
          TypeName = "REG_BINARY"
@@ -1027,7 +1028,7 @@ EndRoutine:
    
 ErrorTrap:
    HandleError
-   TypeName = Empty
+   TypeName = vbNullString
    Resume EndRoutine
 End Function
 
@@ -1037,7 +1038,7 @@ On Error GoTo ErrorTrap
 Dim DataType As Variant
 Dim DataTypes As String
 
-   DataTypes = Empty
+   DataTypes = vbNullString
    For Each DataType In Array(REG_SZ, REG_EXPAND_SZ, REG_BINARY, REG_DWORD, REG_DWORD_BIG_ENDIAN, REG_LINK, REG_MULTI_SZ, REG_QWORD)
       DataTypes = DataTypes & CStr(DataType) & " - " & ValueTypeName(CLng(DataType)) & Delimiter
    Next DataType
@@ -1061,10 +1062,10 @@ Dim Index As Long
 Dim ParentKeyH As Long
 
    Index = 0
-   ParentKeyH = NO_KEY
+   ParentKeyH = ROOT_KEY
    Do
       ChildKeyName = KeyStack(, , Index)
-      If ChildKeyName = Empty Then Exit Do
+      If ChildKeyName = vbNullString Then Exit Do
       ChildKeyH = OpenKey(ChildKeyName, ParentKeyH)
       If ChildKeyH = NO_KEY Then
          ParentKeyH = NO_KEY

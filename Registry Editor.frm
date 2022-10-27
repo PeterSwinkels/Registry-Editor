@@ -2,13 +2,13 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form RegistryEditorWindow 
    AutoRedraw      =   -1  'True
-   ClientHeight    =   1416
+   ClientHeight    =   1425
    ClientLeft      =   60
-   ClientTop       =   636
+   ClientTop       =   630
    ClientWidth     =   5280
    Icon            =   "Registry Editor.frx":0000
    KeyPreview      =   -1  'True
-   ScaleHeight     =   5.9
+   ScaleHeight     =   5.938
    ScaleMode       =   4  'Character
    ScaleWidth      =   44
    StartUpPosition =   2  'CenterScreen
@@ -39,8 +39,8 @@ Begin VB.Form RegistryEditorWindow
       ToolTipText     =   "Lists the current key's values."
       Top             =   120
       Width           =   3135
-      _ExtentX        =   5525
-      _ExtentY        =   1291
+      _ExtentX        =   5530
+      _ExtentY        =   1296
       _Version        =   393216
       Cols            =   3
       FixedCols       =   0
@@ -148,7 +148,7 @@ Dim Values() As ValueStr
 
    Screen.MousePointer = vbHourglass
    
-   If (KeyStack() = Empty And KeyListBox.ListIndex >= 0) Or (KeyListBox.ListIndex > 0) Then
+   If (KeyStack() = vbNullString And KeyListBox.ListIndex >= 0) Or (KeyListBox.ListIndex > 0) Then
       Key = GetKeyInformation(KeyListBox.List(KeyListBox.ListIndex), KeyListBox.ListIndex)
       With Key
          If .KeyAccessible Then
@@ -189,13 +189,13 @@ Dim ParentKeyH As Long
 
    ParentKeyH = WalkKeyStack()
    
-   If ParentKeyH = NO_KEY Then
+   If ParentKeyH = NO_KEY Or ParentKeyH = ROOT_KEY Then
       MsgBox "Cannot create/delete a key here.", vbInformation
    Else
       Select Case Action
          Case ActionCreate
             Key.KeyName = Unescape(InputBox$("Key name:", Escape(Key.KeyName)), , ErrorAt)
-            If Not (EscapeSequenceError(ErrorAt) Or Key.KeyName = Empty) Then
+            If Not (EscapeSequenceError(ErrorAt) Or Key.KeyName = vbNullString) Then
                Key.KeyClass = InputBox$("Key class:", , Escape(Key.KeyClass))
                If Not StrPtr(Key.KeyClass) = 0 Then
                   Key.KeyClass = Unescape(Key.KeyClass, , ErrorAt)
@@ -206,7 +206,7 @@ Dim ParentKeyH As Long
                End If
             End If
          Case ActionDelete
-            If (KeyStack() = Empty And KeyListBox.ListIndex >= 0) Or (KeyListBox.ListIndex > 0) Then
+            If (KeyStack() = vbNullString And KeyListBox.ListIndex >= 0) Or (KeyListBox.ListIndex > 0) Then
                Key = GetKey(KeyListBox.List(KeyListBox.ListIndex), ParentKeyH)
                If Confirmed("Delete """ & Key.KeyName & """?") Then DeleteKey Key.KeyName, ParentKeyH
             End If
@@ -232,12 +232,12 @@ Dim CurrentName As String
 Dim ParentKeyH As Long
 Dim Value As ValueStr
 
-   If (KeyStack() = Empty And KeyListBox.ListIndex >= 0) Or (KeyListBox.ListIndex > 0) Then
+   If (KeyStack() = vbNullString And KeyListBox.ListIndex >= 0) Or (KeyListBox.ListIndex > 0) Then
       KeyStack PushKey:=KeyListBox.List(KeyListBox.ListIndex)
       ParentKeyH = WalkKeyStack()
       KeyStack , PopKey:=True
      
-      If ParentKeyH = NO_KEY Then
+      If ParentKeyH = NO_KEY Or ParentKeyH = ROOT_KEY Then
          MsgBox "Cannot create/delete/modify a value here.", vbInformation
       Else
          Select Case Action
@@ -259,7 +259,7 @@ Dim Value As ValueStr
       
                   If Confirmed("Delete """ & Value.ValueName & """?") Then
                      If ValueTableBox.CellBackColor = DEFAULT_VALUE_COLOR Then
-                        DeleteValue Empty, ParentKeyH
+                        DeleteValue vbNullString, ParentKeyH
                      Else
                         DeleteValue Value.ValueName, ParentKeyH
                      End If
@@ -270,7 +270,7 @@ Dim Value As ValueStr
             Case ActionModify
                If ValueTableBox.Row > 0 Then
                   If ValueTableBox.CellBackColor = DEFAULT_VALUE_COLOR Then
-                     Value.ValueName = Empty
+                     Value.ValueName = vbNullString
                   Else
                      Value.ValueName = ValueTableBox.TextMatrix(ValueTableBox.Row, 1)
                   End If
@@ -475,7 +475,7 @@ On Error GoTo ErrorTrap
 
    Select Case KeyAscii
       Case vbKeyBack
-         If Not KeyStack(, , Index:=0) = Empty Then
+         If Not KeyStack(, , Index:=0) = vbNullString Then
             KeyListBox.ListIndex = 0
             DisplayKeySubkeys
             DisplayKeyValuesAndInformation
