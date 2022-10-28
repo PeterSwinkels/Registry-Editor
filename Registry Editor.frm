@@ -110,10 +110,11 @@ Option Explicit
 
 'This enumaration contains a list of actions that can be performed on keys and/or values.
 Private Enum ActionsE
-   ActionCreate         'The create key/value action.
-   ActionDelete         'The delete key/value action.
-   ActionModify         'The modify value action.
+   ActionCreate         'Defines the create key/value action.
+   ActionDelete         'Defines the delete key/value action.
+   ActionModify         'Defines the modify value action.
 End Enum
+
 'This procedure displays the selected registry key's subkeys.
 Private Sub DisplayKeySubkeys()
 On Error GoTo ErrorTrap
@@ -137,7 +138,6 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
-
 
 'This procedure displays the selected registry key's information and values.
 Private Sub DisplayKeyValuesAndInformation()
@@ -177,7 +177,6 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
-
 
 'This procedure creates/deletes a registry key after requesting the user for input.
 Private Sub EditKey(Action As ActionsE)
@@ -224,8 +223,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-
-'This procedure creates/deletes/modifies a registry value after requesting the user for input.
+'This procedure performs the specified action on a registry value after requesting the user to specify input.
 Private Sub EditValue(Action As ActionsE)
 On Error GoTo ErrorTrap
 Dim CurrentName As String
@@ -301,7 +299,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure requests the user to specify the parameters for a value.
+'This procedure requests the user to specify the parameters for a value and returns the result.
 Private Function RequestValueParameters(Value As ValueStr) As ValueStr
 On Error GoTo ErrorTrap
 Dim ErrorAt As Long
@@ -318,11 +316,11 @@ Dim NewValue As ValueStr
          Else
             .ValueType = CLng(Val(InputBox$("Value type:" & vbCr & ValueTypeNames(), , CStr(Value.ValueType))))
             If Not .ValueType = REG_NONE Then
-               .ValueData = InputBox$("Value data:", , Escape(Value.ValueData, EscapeAll:=IsNumber(.ValueType)))
+               .ValueData = InputBox$("Value data:", , Escape(Value.ValueData, EscapeAll:=Numeric(.ValueType)))
                If StrPtr(.ValueData) = 0 Then
                   .ValueType = REG_NONE
                Else
-                  .ValueData = Unescape(.ValueData, UnescapeAll:=IsNumber(.ValueType), ErrorAt:=ErrorAt)
+                  .ValueData = Unescape(.ValueData, UnescapeAll:=Numeric(.ValueType), ErrorAt:=ErrorAt)
                   If EscapeSequenceError(ErrorAt) Then .ValueType = REG_NONE
                End If
             End If
@@ -339,7 +337,6 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-
 'This procedure gives the command to delete a registry key.
 Private Sub DeleteKeyMenu_Click()
 On Error GoTo ErrorTrap
@@ -352,7 +349,6 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-
 'This procedure gives the command to delete a registry value.
 Private Sub DeleteValueMenu_Click()
 On Error GoTo ErrorTrap
@@ -364,7 +360,6 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
-
 
 'This procedure initializes this window.
 Private Sub Form_Load()
@@ -413,17 +408,10 @@ Dim Column As Long
    Next Column
 End Sub
 
-
-
-
 'This procedure closes this program when this window is closed.
 Private Sub Form_Unload(Cancel As Integer)
 On Error GoTo ErrorTrap
-   If MsgBox("Quit this program?", vbQuestion Or vbYesNo) = vbYes Then
-      End
-   Else
-      Cancel = True
-   End If
+   Cancel = Not Confirmed("Close this program?")
 EndRoutine:
    Exit Sub
    
@@ -493,10 +481,6 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-
-
-
-
 'This procedure gives the command to modify a registry value.
 Private Sub ModifyValueMenu_Click()
 On Error GoTo ErrorTrap
@@ -508,7 +492,6 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
-
 
 'This procedure gives the command to create a new registry key.
 Private Sub NewKeyMenu_Click()
@@ -545,5 +528,4 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
-
 

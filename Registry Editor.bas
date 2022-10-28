@@ -67,25 +67,25 @@ Private Declare Function SafeArrayGetDim Lib "Oleaut32.dll" (ByRef saArray() As 
 
 'The constants and structures used by this program:
 
-'This structure defines the hive key information.
+'This structure defines hive key information.
 Private Type HiveKeyStr
-   KeyName As String    'The hive key's name.
-   PredefinedH As Long  'The hive key's predefined handle.
+   KeyName As String    'Defines a hive key's name.
+   PredefinedH As Long  'Defines a hive key's predefined handle.
 End Type
 
-'This structure defines the registry key information.
+'This structure defines registry key information.
 Public Type KeyStr
-   KeyAccessible As Boolean   'Indicates whether the key is accessible.
-   KeyClass As String         'The key's class.
-   KeyDateTime As FILETIME    'The key's modification/creation date and time.
-   KeyName As String          'The key's name.
+   KeyAccessible As Boolean   'Indicates whether a key is accessible.
+   KeyClass As String         'Defines a key's class.
+   KeyDateTime As FILETIME    'Defines a key's modification/creation date and time.
+   KeyName As String          'Defines a key's name.
 End Type
 
-'This structure defines the registry value information.
+'This structure defines registry value information.
 Public Type ValueStr
-   ValueData As String  'The value's data.
-   ValueName As String  'The value's name.
-   ValueType As Long    'The value's data type.
+   ValueData As String  'Defines a value's data.
+   ValueName As String  'Defines a value's name.
+   ValueType As Long    'Defines a value's data type.
 End Type
 
 Public Const DEFAULT_VALUE_COLOR As Long = vbCyan       'Defines the background color for displaying default values.
@@ -106,7 +106,7 @@ Private Const MAX_REG_VALUE_DATA As Long = &HFFFFF       'Defines the maximum le
 Private Const MAX_REG_VALUE_NAME As Long = &H3FFF&       'Defines the maximum length in bytes allowed for a registry value's name.
 Private Const MAX_SHORT_STRING As Long = &HFF&           'Defines the maximum length in bytes allowed for a short string.
 
-'This procedure checks whether an error occurred during the most recent Windows API call.
+'This procedure checks whether an error occurred during the most recent Windows API call and returns the API call's return value.
 Private Function CheckForError(ReturnValue As Long, Optional CheckReturnValue As Boolean = False, Optional Ignored As Long = ERROR_SUCCESS) As Long
 Dim Description As String
 Dim ErrorCode As Long
@@ -131,7 +131,8 @@ On Error GoTo ErrorTrap
      
       Message = "API error code: " & CStr(ErrorCode) & " - " & Description
       If Not CheckReturnValue Then Message = Message & "Return value: " & CStr(ReturnValue)
-      MsgBox Message, vbExclamation
+      
+      If MsgBox(Message, vbExclamation Or vbOKCancel) = vbCancel Then End
    End If
    
 EndRoutine:
@@ -142,14 +143,15 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Function
-'This procedure closes the specified registry key.
+
+'This procedure closes the specified registry key and returns the API call's return value.
 Public Function CloseKey(KeyH As Long) As Long
 On Error GoTo ErrorTrap
 Dim ReturnValue As Long
    
    ReturnValue = ERROR_SUCCESS
    
-   If Not GetHiveKey(, KeyH).PredefinedH = NO_KEY Then
+   If Not GetHiveKey(KeyH).PredefinedH = NO_KEY Then
       ReturnValue = CheckForError(RegCloseKey(KeyH), CheckReturnValue:=True)
    End If
    
@@ -162,11 +164,15 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure asks the user a yes/no question and returns whether the answer was a "yes".
+'This procedure requests the user to answer a yes/no question and returns the result.
 Public Function Confirmed(Question As String) As Boolean
 On Error GoTo ErrorTrap
-   Confirmed = (MsgBox(Question, vbQuestion Or vbYesNo Or vbDefaultButton2) = vbYes)
+Dim IsConfirmed As Boolean
+   
+   IsConfirmed = (MsgBox(Question, vbQuestion Or vbYesNo Or vbDefaultButton2) = vbYes)
+   
 EndRoutine:
+   Confirmed = IsConfirmed
    Exit Function
    
 ErrorTrap:
@@ -174,8 +180,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-
-'This procedure creates the specified registry key.
+'This procedure creates the specified registry key and returns the API call's return value.
 Public Function CreateKey(Key As KeyStr, ParentKeyH As Long, Optional ByRef Disposition As Long) As Long
 On Error GoTo ErrorTrap
 Dim KeyH As Long
@@ -193,7 +198,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure deletes the specified registry key.
+'This procedure deletes the specified registry key and returns the API call's return value.
 Public Function DeleteKey(KeyName As String, ParentKeyH As Long) As Long
 On Error GoTo ErrorTrap
 Dim ReturnValue As Long
@@ -209,9 +214,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-
-
-'This procedure deletes the specified registry value.
+'This procedure deletes the specified registry value and returns the API call's return value.
 Public Function DeleteValue(ValueName As String, ParentKeyH As Long) As Long
 On Error GoTo ErrorTrap
 Dim ReturnValue As Long
@@ -227,8 +230,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-
-'This procedure converts non-displayable characters in the specified text to escape sequences.
+'This procedure converts non-displayable characters in the specified text to escape sequences and returns the result.
 Public Function Escape(Text As String, Optional EscapeAll As Boolean = False) As String
 On Error GoTo ErrorTrap
 Dim Character As String
@@ -267,7 +269,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure checks whether the return value for escape sequence procedures indicates an error.
+'This procedure checks whether the return value for escape sequence procedures indicates an error and returns the result.
 Public Function EscapeSequenceError(ErrorAt As Long) As Boolean
 On Error GoTo ErrorTrap
 Dim EscapeError As Boolean
@@ -284,10 +286,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-
-
-
-'This procedure converts the specified date and time to text.
+'This procedure converts the specified date and time to text and returns the result.
 Public Function FileTimeToText(FileDateTime As FILETIME) As String
 On Error GoTo ErrorTrap
 Dim SystemDateTime As SYSTEMTIME
@@ -314,53 +313,21 @@ ErrorTrap:
    Text = vbNullString
    Resume EndRoutine
 End Function
+
 'This procedure returns the specified registry hive key's information.
-Private Function GetHiveKey(Optional Index As Long = NO_INDEX, Optional HiveKeyH As Long = NO_KEY, Optional HiveKeyName As String = vbNullString) As HiveKeyStr
+Private Function GetHiveKey(Optional HiveKeyH As Long = NO_KEY, Optional HiveKeyName As String = vbNullString) As HiveKeyStr
 On Error GoTo ErrorTrap
 Dim HiveKey As HiveKeyStr
-   
+Dim HiveKeyIndex As Long
+
    HiveKey.KeyName = vbNullString
    HiveKey.PredefinedH = NO_KEY
    
+   HiveKeyIndex = 0
    Do
-      Select Case Index
-         Case 0
-            HiveKey.KeyName = "HKEY_CLASSES_ROOT"
-            HiveKey.PredefinedH = HKEY_CLASSES_ROOT
-         Case 1
-            HiveKey.KeyName = "HKEY_CURRENT_CONFIG"
-            HiveKey.PredefinedH = HKEY_CURRENT_CONFIG
-         Case 2
-            HiveKey.KeyName = "HKEY_CURRENT_USER"
-            HiveKey.PredefinedH = HKEY_CURRENT_USER
-         Case 3
-            HiveKey.KeyName = "HKEY_DYN_DATA"
-            HiveKey.PredefinedH = HKEY_DYN_DATA
-         Case 4
-            HiveKey.KeyName = "HKEY_LOCAL_MACHINE"
-            HiveKey.PredefinedH = HKEY_LOCAL_MACHINE
-         Case 4
-            HiveKey.KeyName = "HKEY_PERFORMANCE_DATA"
-            HiveKey.PredefinedH = HKEY_PERFORMANCE_DATA
-         Case 5
-            HiveKey.KeyName = "HKEY_USERS"
-            HiveKey.PredefinedH = HKEY_USERS
-         Case Is > 5
-            HiveKey.KeyName = vbNullString
-            HiveKey.PredefinedH = NO_KEY
-            Exit Do
-      End Select
-      If HiveKeyH = NO_KEY And HiveKeyName = vbNullString Then
-         Exit Do
-      Else
-         If Not HiveKeyH = NO_KEY Then
-            If HiveKey.PredefinedH = HiveKeyH Then Exit Do
-         ElseIf Not HiveKeyName = vbNullString Then
-            If HiveKey.KeyName = HiveKeyName Then Exit Do
-         End If
-         Index = Index + 1
-      End If
-   Loop
+      HiveKey = HiveKeys(HiveKeyIndex)
+      HiveKeyIndex = HiveKeyIndex + 1
+   Loop Until HiveKey.KeyName = vbNullString Or HiveKey.KeyName = HiveKeyName Or HiveKey.PredefinedH = HiveKeyH
    
 EndRoutine:
    GetHiveKey = HiveKey
@@ -454,28 +421,29 @@ Dim ReturnValue As Long
    If ParentKeyH = ROOT_KEY Then
       HiveKeyIndex = 0
       Do
-         HiveKeyH = GetHiveKey(HiveKeyIndex).PredefinedH
-         If HiveKeyH = NO_KEY Then Exit Do
-         ReturnValue = RegOpenKeyExA(HiveKeyH, vbNullString, CLng(0), KEY_ALL_ACCESS Or KEY_WOW64_64KEY, KeyH)
-         Select Case ReturnValue
-            Case ERROR_SUCCESS
-               CloseKey KeyH
-   
-               If CheckForError(SafeArrayGetDim(Keys())) = 0 Then
-                  ReDim Keys(0 To 0) As KeyStr
-               Else
-                  ReDim Preserve Keys(LBound(Keys()) To UBound(Keys()) + 1) As KeyStr
-               End If
-               Keys(UBound(Keys())).KeyAccessible = True
-               Keys(UBound(Keys())).KeyClass = vbNullString
-               Keys(UBound(Keys())).KeyDateTime.dwHighDateTime = 0
-               Keys(UBound(Keys())).KeyDateTime.dwLowDateTime = 0
-               Keys(UBound(Keys())).KeyName = GetHiveKey(HiveKeyIndex).KeyName
-            Case Not ERROR_CALL_NOT_IMPLEMENTED, ERROR_INVALID_HANDLE
-               CheckForError ReturnValue, CheckReturnValue:=True
-         End Select
+         HiveKeyH = HiveKeys(HiveKeyIndex).PredefinedH
+         If Not HiveKeyH = NO_KEY Then
+            ReturnValue = RegOpenKeyExA(HiveKeyH, vbNullString, CLng(0), KEY_ALL_ACCESS Or KEY_WOW64_64KEY, KeyH)
+            Select Case ReturnValue
+               Case ERROR_SUCCESS
+                  CloseKey KeyH
+      
+                  If CheckForError(SafeArrayGetDim(Keys())) = 0 Then
+                     ReDim Keys(0 To 0) As KeyStr
+                  Else
+                     ReDim Preserve Keys(LBound(Keys()) To UBound(Keys()) + 1) As KeyStr
+                  End If
+                  Keys(UBound(Keys())).KeyAccessible = True
+                  Keys(UBound(Keys())).KeyClass = vbNullString
+                  Keys(UBound(Keys())).KeyDateTime.dwHighDateTime = 0
+                  Keys(UBound(Keys())).KeyDateTime.dwLowDateTime = 0
+                  Keys(UBound(Keys())).KeyName = HiveKeys(HiveKeyIndex).KeyName
+               Case Not ERROR_CALL_NOT_IMPLEMENTED, ERROR_INVALID_HANDLE
+                  CheckForError ReturnValue, CheckReturnValue:=True
+            End Select
+         End If
          HiveKeyIndex = HiveKeyIndex + 1
-      Loop
+      Loop Until HiveKeyH = NO_KEY
    Else
       KeyIndex = 0
       Do
@@ -484,19 +452,20 @@ Dim ReturnValue As Long
          ClassLength = Len(KeyClass)
          NameLength = Len(KeyName)
          ReturnValue = CheckForError(RegEnumKeyExA(ParentKeyH, KeyIndex, KeyName, NameLength, CLng(0), KeyClass, ClassLength, KeyDateTime), CheckReturnValue:=True, Ignored:=ERROR_NO_MORE_ITEMS)
-         If ReturnValue = ERROR_NO_MORE_ITEMS Or Not ReturnValue = ERROR_SUCCESS Then Exit Do
-         If CheckForError(SafeArrayGetDim(Keys())) = 0 Then
-            ReDim Keys(0 To 0) As KeyStr
-         Else
-            ReDim Preserve Keys(LBound(Keys()) To UBound(Keys()) + 1) As KeyStr
+         If ReturnValue = ERROR_SUCCESS Then
+            If CheckForError(SafeArrayGetDim(Keys())) = 0 Then
+               ReDim Keys(0 To 0) As KeyStr
+            Else
+               ReDim Preserve Keys(LBound(Keys()) To UBound(Keys()) + 1) As KeyStr
+            End If
+            Keys(UBound(Keys())).KeyAccessible = Not (ReturnValue = ERROR_ACCESS_DENIED)
+            Keys(UBound(Keys())).KeyClass = Left$(KeyClass, ClassLength)
+            Keys(UBound(Keys())).KeyDateTime.dwHighDateTime = KeyDateTime.dwHighDateTime
+            Keys(UBound(Keys())).KeyDateTime.dwLowDateTime = KeyDateTime.dwLowDateTime
+            Keys(UBound(Keys())).KeyName = Left$(KeyName, NameLength)
+            KeyIndex = KeyIndex + 1
          End If
-         Keys(UBound(Keys())).KeyAccessible = Not (ReturnValue = ERROR_ACCESS_DENIED)
-         Keys(UBound(Keys())).KeyClass = Left$(KeyClass, ClassLength)
-         Keys(UBound(Keys())).KeyDateTime.dwHighDateTime = KeyDateTime.dwHighDateTime
-         Keys(UBound(Keys())).KeyDateTime.dwLowDateTime = KeyDateTime.dwLowDateTime
-         Keys(UBound(Keys())).KeyName = Left$(KeyName, NameLength)
-         KeyIndex = KeyIndex + 1
-      Loop
+      Loop Until ReturnValue = ERROR_NO_MORE_ITEMS
    End If
    
 EndRoutine:
@@ -522,7 +491,7 @@ Dim ValueType As Long
    
    ReturnValue = CheckForError(RegQueryValueExA(ParentKeyH, ValueName, CLng(0), ValueType, ValueData, DataLength), CheckReturnValue:=True)
    If ReturnValue = ERROR_SUCCESS Then
-      If Not IsNumber(ValueType) And DataLength > 0 Then DataLength = DataLength - 1
+      If Not Numeric(ValueType) And DataLength > 0 Then DataLength = DataLength - 1
       Value.ValueData = Left$(ValueData, DataLength)
       Value.ValueName = ValueName
       Value.ValueType = ValueType
@@ -540,6 +509,7 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Function
+
 'This procedure returns the registry values contained by the specified key.
 Public Function GetValues(ParentKeyH As Long) As ValueStr()
 On Error GoTo ErrorTrap
@@ -563,19 +533,20 @@ Dim ValueType As Long
          ValueName = String$(MAX_REG_VALUE_NAME, vbNullChar)
          NameLength = Len(ValueName)
          ReturnValue = CheckForError(RegEnumValueA(ParentKeyH, Index, ValueName, NameLength, CLng(0), ValueType, ValueData, DataLength), CheckReturnValue:=True, Ignored:=ERROR_NO_MORE_ITEMS)
-         If Not IsNumber(ValueType) And DataLength > 0 Then DataLength = DataLength - 1
-         If ReturnValue = ERROR_NO_MORE_ITEMS Or Not ReturnValue = ERROR_SUCCESS Then Exit Do
-         If CheckForError(SafeArrayGetDim(Values())) = 0 Then
-            ReDim Values(0 To 0) As ValueStr
-         Else
-            ReDim Preserve Values(LBound(Values()) To UBound(Values()) + 1) As ValueStr
+         If Not Numeric(ValueType) And DataLength > 0 Then DataLength = DataLength - 1
+         If ReturnValue = ERROR_SUCCESS Then
+            If CheckForError(SafeArrayGetDim(Values())) = 0 Then
+               ReDim Values(0 To 0) As ValueStr
+            Else
+               ReDim Preserve Values(LBound(Values()) To UBound(Values()) + 1) As ValueStr
+            End If
+      
+            Values(UBound(Values())).ValueData = Left$(ValueData, DataLength)
+            Values(UBound(Values())).ValueName = Left$(ValueName, NameLength)
+            Values(UBound(Values())).ValueType = ValueType
+            Index = Index + 1
          End If
-   
-         Values(UBound(Values())).ValueData = Left$(ValueData, DataLength)
-         Values(UBound(Values())).ValueName = Left$(ValueName, NameLength)
-         Values(UBound(Values())).ValueType = ValueType
-         Index = Index + 1
-      Loop
+      Loop Until ReturnValue = ERROR_NO_MORE_ITEMS
    End If
    
 EndRoutine:
@@ -596,30 +567,53 @@ Dim ErrorCode As Long
    ErrorCode = Err.Number
    Err.Clear
    
-   On Error Resume Next
+   On Error GoTo ErrorTrap
    Description = Description & vbCr & "Error code: " & CStr(ErrorCode)
-   MsgBox Description, vbExclamation
+   If MsgBox(Description, vbExclamation Or vbOKCancel) = vbCancel Then
+      Resume EndProgram
+   End If
+   Exit Sub
+   
+EndProgram:
+   End
+      
+ErrorTrap:
+   Resume EndProgram
 End Sub
 
-
-
-
-'This procedure indicates whether the specified value type is numeric.
-Public Function IsNumber(ValueType As Long) As Boolean
+'This function returns the hive key with the specified index.
+Private Function HiveKeys(HiveKeyIndex As Long) As HiveKeyStr
 On Error GoTo ErrorTrap
-Dim Numeric As Boolean
-Dim TypeV As Variant
+Dim HiveKey As HiveKeyStr
 
-   Numeric = False
-   For Each TypeV In Array(REG_BINARY, REG_DWORD, REG_DWORD_BIG_ENDIAN, REG_QWORD)
-      If CLng(TypeV) = ValueType Then
-         Numeric = True
-         Exit For
-      End If
-   Next TypeV
-   
+   HiveKey.KeyName = vbNullString
+   HiveKey.PredefinedH = NO_KEY
+
+   Select Case HiveKeyIndex
+       Case 0
+          HiveKey.KeyName = "HKEY_CLASSES_ROOT"
+          HiveKey.PredefinedH = HKEY_CLASSES_ROOT
+       Case 1
+          HiveKey.KeyName = "HKEY_CURRENT_CONFIG"
+          HiveKey.PredefinedH = HKEY_CURRENT_CONFIG
+       Case 2
+          HiveKey.KeyName = "HKEY_CURRENT_USER"
+          HiveKey.PredefinedH = HKEY_CURRENT_USER
+       Case 3
+          HiveKey.KeyName = "HKEY_DYN_DATA"
+          HiveKey.PredefinedH = HKEY_DYN_DATA
+       Case 4
+          HiveKey.KeyName = "HKEY_LOCAL_MACHINE"
+          HiveKey.PredefinedH = HKEY_LOCAL_MACHINE
+       Case 4
+          HiveKey.KeyName = "HKEY_PERFORMANCE_DATA"
+          HiveKey.PredefinedH = HKEY_PERFORMANCE_DATA
+       Case 5
+          HiveKey.KeyName = "HKEY_USERS"
+          HiveKey.PredefinedH = HKEY_USERS
+    End Select
 EndRoutine:
-   IsNumber = Numeric
+   HiveKeys = HiveKey
    Exit Function
    
 ErrorTrap:
@@ -669,23 +663,6 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure is executed when this program is started.
-Private Sub Main()
-On Error GoTo ErrorTrap
-   ChDrive Left$(App.Path, InStr(App.Path, ":"))
-   ChDir App.Path
-   
-   KeyStack , , , Refresh:=True
-   
-   RegistryEditorWindow.Show
-EndRoutine:
-   Exit Sub
-   
-ErrorTrap:
-   HandleError
-   Resume EndRoutine
-End Sub
-
 'This procedure returns the path to the selected registry key.
 Public Function KeyStackToText() As String
 On Error GoTo ErrorTrap
@@ -697,10 +674,11 @@ Dim Text As String
    Text = "\"
    Do
       KeyName = KeyStack(, , Index)
-      If KeyName = vbNullString Then Exit Do
-      Text = Text & KeyName & "\"
-      Index = Index + 1
-   Loop
+      If Not KeyName = vbNullString Then
+         Text = Text & KeyName & "\"
+         Index = Index + 1
+      End If
+   Loop Until KeyName = vbNullString
    
 EndRoutine:
    KeyStackToText = Text
@@ -712,17 +690,54 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
+'This procedure is executed when this program is started.
+Private Sub Main()
+On Error GoTo ErrorTrap
+   ChDrive Left$(App.Path, InStr(App.Path, ":"))
+   ChDir App.Path
+   
+   KeyStack , , , Refresh:=True
 
+   RegistryEditorWindow.Show
+EndRoutine:
+   Exit Sub
+   
+ErrorTrap:
+   HandleError
+   Resume EndRoutine
+End Sub
 
+'This procedure returns whether the specified value type is numeric.
+Public Function Numeric(ValueType As Long) As Boolean
+On Error GoTo ErrorTrap
+Dim IsNumericV As Boolean
+Dim TypeV As Variant
 
-'This procedure opens the registry key under the specified key with the specified name.
+   IsNumericV = False
+   For Each TypeV In Array(REG_BINARY, REG_DWORD, REG_DWORD_BIG_ENDIAN, REG_QWORD)
+      If CLng(TypeV) = ValueType Then
+         IsNumericV = True
+         Exit For
+      End If
+   Next TypeV
+   
+EndRoutine:
+   Numeric = IsNumericV
+   Exit Function
+   
+ErrorTrap:
+   HandleError
+   Resume EndRoutine
+End Function
+
+'This procedure opens the registry key under the specified key with the specified name and returns its handle.
 Private Function OpenKey(ChildKeyName As String, Optional ParentKeyH As Long = ROOT_KEY) As Long
 On Error GoTo ErrorTrap
 Dim KeyH As Long
 
    KeyH = NO_KEY
    If ParentKeyH = ROOT_KEY Then
-      KeyH = GetHiveKey(, , ChildKeyName).PredefinedH
+      KeyH = GetHiveKey(, ChildKeyName).PredefinedH
    Else
       CheckForError RegOpenKeyExA(ParentKeyH, ChildKeyName, CLng(0), KEY_ALL_ACCESS Or KEY_WOW64_64KEY, KeyH), CheckReturnValue:=True
    End If
@@ -764,7 +779,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure pads the specified registry value's data if required.
+'This procedure pads the specified registry value's data if required and returns the result.
 Private Function PadData(Value As ValueStr) As String
 On Error GoTo ErrorTrap
 Dim PaddedData As String
@@ -789,8 +804,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-
-'This procedure manages the security attributes used to access the registry.
+'This procedure manages and returns the security attributes used to access the registry.
 Private Function SecurityAttributes() As SECURITY_ATTRIBUTES
 On Error GoTo ErrorTrap
 Static CurrentAttributes As SECURITY_ATTRIBUTES
@@ -812,14 +826,14 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure creates/modifies the specified registry value.
+'This procedure creates/modifies the specified registry value and returns the API call's return value.
 Public Function SetValue(Value As ValueStr, ParentKeyH As Long) As Long
 On Error GoTo ErrorTrap
 Dim DataLength As Long
 Dim ReturnValue As Long
 
    With Value
-      If IsNumber(.ValueType) Then
+      If Numeric(.ValueType) Then
          .ValueData = PadData(Value)
          DataLength = Len(.ValueData)
       Else
@@ -873,9 +887,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-
-
-'This procedure converts any escape sequences in the specified text to characters.
+'This procedure converts any escape sequences in the specified text to characters and returns the result.
 Public Function Unescape(Text As String, Optional UnescapeAll As Boolean = False, Optional ErrorAt As Long = 0) As String
 On Error GoTo ErrorTrap
 Dim Character As String
@@ -887,7 +899,7 @@ Dim Unescaped As String
    ErrorAt = 0
    Index = 1
    Unescaped = vbNullString
-   Do Until Index > Len(Text)
+   Do Until Index > Len(Text) Or ErrorAt > 0
       Character = Mid$(Text, Index, 1)
       NextCharacter = Mid$(Text, Index + 1, 1)
    
@@ -905,17 +917,14 @@ Dim Unescaped As String
                   Index = Index + 2
                Else
                   ErrorAt = Index
-                  Exit Do
                End If
             Else
                ErrorAt = Index
-               Exit Do
             End If
          End If
       Else
          If UnescapeAll Then
             ErrorAt = Index
-            Exit Do
          Else
             Unescaped = Unescaped & Character
          End If
@@ -932,7 +941,6 @@ ErrorTrap:
    Unescaped = vbNullString
    Resume EndRoutine
 End Function
-
 
 'This procedure updates the specified value table.
 Public Sub UpdateValueTable(ValueTable As MSFlexGrid, Values() As ValueStr)
@@ -956,11 +964,11 @@ Dim Index As Long
                If Values(Index).ValueName = vbNullString Then
                   .CellBackColor = DEFAULT_VALUE_COLOR: .Col = 0: .Text = ValueTypeName(Values(Index).ValueType)
                   .CellBackColor = DEFAULT_VALUE_COLOR: .Col = 1: .Text = "(Default)"
-                  .CellBackColor = DEFAULT_VALUE_COLOR: .Col = 2: .Text = Escape(Values(Index).ValueData, EscapeAll:=IsNumber(Values(Index).ValueType))
+                  .CellBackColor = DEFAULT_VALUE_COLOR: .Col = 2: .Text = Escape(Values(Index).ValueData, EscapeAll:=Numeric(Values(Index).ValueType))
                Else
                   .Col = 0: .Text = ValueTypeName(Values(Index).ValueType)
                   .Col = 1: .Text = Values(Index).ValueName
-                  .Col = 2: .Text = Escape(Values(Index).ValueData, EscapeAll:=IsNumber(Values(Index).ValueType))
+                  .Col = 2: .Text = Escape(Values(Index).ValueData, EscapeAll:=Numeric(Values(Index).ValueType))
                End If
             Next Index
          
@@ -978,7 +986,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure returns value indicating whether the specified registry value exists.
+'This procedure returns whether the specified registry value exists.
 Public Function ValueExists(ValueName As String, ParentKeyH As Long) As Boolean
 On Error GoTo ErrorTrap
 Dim ReturnValue As Long
@@ -1036,12 +1044,13 @@ End Function
 Public Function ValueTypeNames(Optional Delimiter As String = vbCr)
 On Error GoTo ErrorTrap
 Dim DataType As Variant
-Dim DataTypes As String
+Static DataTypes As String
 
-   DataTypes = vbNullString
-   For Each DataType In Array(REG_SZ, REG_EXPAND_SZ, REG_BINARY, REG_DWORD, REG_DWORD_BIG_ENDIAN, REG_LINK, REG_MULTI_SZ, REG_QWORD)
-      DataTypes = DataTypes & CStr(DataType) & " - " & ValueTypeName(CLng(DataType)) & Delimiter
-   Next DataType
+   If DataTypes = vbNullString Then
+      For Each DataType In Array(REG_SZ, REG_EXPAND_SZ, REG_BINARY, REG_DWORD, REG_DWORD_BIG_ENDIAN, REG_LINK, REG_MULTI_SZ, REG_QWORD)
+         DataTypes = DataTypes & CStr(DataType) & " - " & ValueTypeName(CLng(DataType)) & Delimiter
+      Next DataType
+   End If
    
 EndRoutine:
    ValueTypeNames = DataTypes
@@ -1051,7 +1060,6 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Function
-
 
 'This procedure returns the handle of the last key on the stack.
 Public Function WalkKeyStack() As Long
@@ -1065,16 +1073,17 @@ Dim ParentKeyH As Long
    ParentKeyH = ROOT_KEY
    Do
       ChildKeyName = KeyStack(, , Index)
-      If ChildKeyName = vbNullString Then Exit Do
-      ChildKeyH = OpenKey(ChildKeyName, ParentKeyH)
-      If ChildKeyH = NO_KEY Then
-         ParentKeyH = NO_KEY
-         Exit Do
+      If Not ChildKeyName = vbNullString Then
+         ChildKeyH = OpenKey(ChildKeyName, ParentKeyH)
+         If ChildKeyH = NO_KEY Then
+            ParentKeyH = NO_KEY
+         Else
+            CloseKey ParentKeyH
+            ParentKeyH = ChildKeyH
+            Index = Index + 1
+         End If
       End If
-      CloseKey ParentKeyH
-      ParentKeyH = ChildKeyH
-      Index = Index + 1
-   Loop
+   Loop Until ChildKeyH = NO_KEY Or ChildKeyName = vbNullString
    
 EndRoutine:
    WalkKeyStack = ParentKeyH
@@ -1085,5 +1094,4 @@ ErrorTrap:
    ParentKeyH = NO_KEY
    Resume EndRoutine
 End Function
-
 
