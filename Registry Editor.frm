@@ -108,7 +108,7 @@ Attribute VB_Exposed = False
 'This module contains this program's main interface window.
 Option Explicit
 
-'This enumaration contains a list of actions that can be performed on keys and/or values.
+'This enumeration contains a list of actions that can be performed on keys and/or values.
 Private Enum ActionsE
    ActionCreate         'Defines the create key/value action.
    ActionDelete         'Defines the delete key/value action.
