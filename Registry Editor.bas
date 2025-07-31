@@ -804,6 +804,21 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
+Public Function ProgramInformation() As String
+On Error GoTo ErrorTrap
+Dim Information As String
+
+   Information = App.Title & " v" & CStr(App.Major) & "." & CStr(App.Minor) & CStr(App.Revision) & " - by: " & App.CompanyName
+EndRoutine:
+   ProgramInformation = Information
+   Exit Function
+   
+ErrorTrap:
+   HandleError
+   Resume EndRoutine
+End Function
+
+
 'This procedure manages and returns the security attributes used to access the registry.
 Private Function SecurityAttributes() As SECURITY_ATTRIBUTES
 On Error GoTo ErrorTrap

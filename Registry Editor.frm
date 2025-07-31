@@ -2,13 +2,13 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form RegistryEditorWindow 
    AutoRedraw      =   -1  'True
-   ClientHeight    =   1425
+   ClientHeight    =   1416
    ClientLeft      =   60
-   ClientTop       =   630
+   ClientTop       =   636
    ClientWidth     =   5280
    Icon            =   "Registry Editor.frx":0000
    KeyPreview      =   -1  'True
-   ScaleHeight     =   5.938
+   ScaleHeight     =   5.9
    ScaleMode       =   4  'Character
    ScaleWidth      =   44
    StartUpPosition =   2  'CenterScreen
@@ -39,8 +39,8 @@ Begin VB.Form RegistryEditorWindow
       ToolTipText     =   "Lists the current key's values."
       Top             =   120
       Width           =   3135
-      _ExtentX        =   5530
-      _ExtentY        =   1296
+      _ExtentX        =   5525
+      _ExtentY        =   1291
       _Version        =   393216
       Cols            =   3
       FixedCols       =   0
@@ -365,7 +365,7 @@ End Sub
 Private Sub Form_Load()
 On Error GoTo ErrorTrap
 
-   Me.Caption = App.Title & " v" & CStr(App.Major) & "." & CStr(App.Minor) & CStr(App.Revision) & " - by: " & App.CompanyName
+   Me.Caption = ProgramInformation()
    Me.Width = Screen.Width / 2
    Me.Height = Screen.Height / 2
    
@@ -378,7 +378,6 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
-
 'This procedure adjusts this window to its new size.
 Private Sub Form_Resize()
 On Error Resume Next
