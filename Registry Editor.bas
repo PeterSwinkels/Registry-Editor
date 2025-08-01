@@ -621,7 +621,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure adds or returns a parent key name.
+'This procedure adds or returns a parent key name to/from a stack keeping track of the parent keys.
 Public Function KeyStack(Optional PushKey As String = vbNullString, Optional PopKey As Boolean = False, Optional ByRef Index As Long = NO_INDEX, Optional Refresh As Boolean = False) As String
 On Error GoTo ErrorTrap
 Dim KeyName As String
