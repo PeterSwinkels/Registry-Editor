@@ -438,7 +438,7 @@ Dim ReturnValue As Long
                   Keys(UBound(Keys())).KeyDateTime.dwHighDateTime = 0
                   Keys(UBound(Keys())).KeyDateTime.dwLowDateTime = 0
                   Keys(UBound(Keys())).KeyName = HiveKeys(HiveKeyIndex).KeyName
-               Case Not ERROR_CALL_NOT_IMPLEMENTED, ERROR_INVALID_HANDLE
+               Case Not ERROR_CALL_NOT_IMPLEMENTED, Not ERROR_INVALID_HANDLE
                   CheckForError ReturnValue, CheckReturnValue:=True
             End Select
          End If
@@ -605,10 +605,10 @@ Dim HiveKey As HiveKeyStr
        Case 4
           HiveKey.KeyName = "HKEY_LOCAL_MACHINE"
           HiveKey.PredefinedH = HKEY_LOCAL_MACHINE
-       Case 4
+       Case 5
           HiveKey.KeyName = "HKEY_PERFORMANCE_DATA"
           HiveKey.PredefinedH = HKEY_PERFORMANCE_DATA
-       Case 5
+       Case 6
           HiveKey.KeyName = "HKEY_USERS"
           HiveKey.PredefinedH = HKEY_USERS
     End Select
