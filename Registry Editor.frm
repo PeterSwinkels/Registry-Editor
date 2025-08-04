@@ -2,13 +2,13 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form RegistryEditorWindow 
    AutoRedraw      =   -1  'True
-   ClientHeight    =   1416
+   ClientHeight    =   1425
    ClientLeft      =   60
-   ClientTop       =   636
+   ClientTop       =   630
    ClientWidth     =   5280
    Icon            =   "Registry Editor.frx":0000
    KeyPreview      =   -1  'True
-   ScaleHeight     =   5.9
+   ScaleHeight     =   5.938
    ScaleMode       =   4  'Character
    ScaleWidth      =   44
    StartUpPosition =   2  'CenterScreen
@@ -39,8 +39,8 @@ Begin VB.Form RegistryEditorWindow
       ToolTipText     =   "Lists the current key's values."
       Top             =   120
       Width           =   3135
-      _ExtentX        =   5525
-      _ExtentY        =   1291
+      _ExtentX        =   5530
+      _ExtentY        =   1296
       _Version        =   393216
       Cols            =   3
       FixedCols       =   0
@@ -193,9 +193,9 @@ Dim ParentKeyH As Long
    Else
       Select Case Action
          Case ActionCreate
-            Key.KeyName = Unescape(InputBox$("Key name:", Escape(Key.KeyName)), , ErrorAt)
+            Key.KeyName = Unescape(InputBox$("Key name:"), , ErrorAt)
             If Not (EscapeSequenceError(ErrorAt) Or Key.KeyName = vbNullString) Then
-               Key.KeyClass = InputBox$("Key class:", , Escape(Key.KeyClass))
+               Key.KeyClass = InputBox$("Key class:")
                If Not StrPtr(Key.KeyClass) = 0 Then
                   Key.KeyClass = Unescape(Key.KeyClass, , ErrorAt)
                   If Not EscapeSequenceError(ErrorAt) Then

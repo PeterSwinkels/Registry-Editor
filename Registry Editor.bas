@@ -26,7 +26,6 @@ Private Type SYSTEMTIME
 End Type
 
 'The Microsoft Windows API constants used by this program:
-Public Const REG_BINARY As Long = 3&
 Public Const REG_NONE As Long = 0&
 Public Const REG_OPENED_EXISTING_KEY As Long = &H2&
 Private Const ERROR_ACCESS_DENIED As Long = 5
@@ -41,6 +40,7 @@ Private Const FORMAT_MESSAGE_FROM_SYSTEM As Long = &H1000&
 Private Const FORMAT_MESSAGE_IGNORE_INSERTS As Long = &H200&
 Private Const KEY_ALL_ACCESS As Long = &HF003F
 Private Const KEY_WOW64_64KEY As Long = &H100&
+Private Const REG_BINARY As Long = 3&
 Private Const REG_DWORD As Long = 4&
 Private Const REG_DWORD_BIG_ENDIAN As Long = 5&
 Private Const REG_EXPAND_SZ As Long = 2&
@@ -354,7 +354,6 @@ Dim ReturnValue As Long
       ClassLength = Len(KeyClass)
    
       ReturnValue = CheckForError(RegQueryInfoKeyA(KeyH, KeyClass, ClassLength, CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), KeyDateTime), CheckReturnValue:=True, Ignored:=ERROR_INVALID_PARAMETER)
-   
       If ReturnValue = ERROR_INVALID_PARAMETER Then
          ReturnValue = CheckForError(RegQueryInfoKeyA(KeyH, vbNullString, CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), CLng(0), KeyDateTime), CheckReturnValue:=True, Ignored:=ERROR_INVALID_PARAMETER)
          ClassLength = 0
@@ -1056,7 +1055,7 @@ ErrorTrap:
 End Function
 
 'This procedure returns a list of all registry data type names.
-Public Function ValueTypeNames(Optional Delimiter As String = vbCr)
+Public Function ValueTypeNames(Optional Delimiter As String = vbCr) As String
 On Error GoTo ErrorTrap
 Dim DataType As Variant
 Static DataTypes As String
